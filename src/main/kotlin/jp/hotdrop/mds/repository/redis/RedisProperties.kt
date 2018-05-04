@@ -1,10 +1,10 @@
 package jp.hotdrop.mds.repository.redis
 
+import org.hibernate.validator.constraints.NotEmpty
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import javax.validation.constraints.Max
 import javax.validation.constraints.Min
-import javax.validation.constraints.NotEmpty
 
 @Component
 @ConfigurationProperties(prefix = "spring.redis")

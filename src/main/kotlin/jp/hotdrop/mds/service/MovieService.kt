@@ -20,11 +20,13 @@ class MovieService @Autowired constructor(
     private val log = LoggerFactory.getLogger("jp.hotdrop.mds.trace")
 
     fun findById(id: String): Movie? {
+        log.info("Start findById on MovieService")
         id.toLongOrNull() ?: throw MdsException(400, "ID is not Long data type! id=$id.")
         return repository.find(id)
     }
 
     fun findAll(): List<Movie>? {
+        log.info("Start findAll on MovieService")
         val movies = repository.findAll()
         movies?.let {
             log.info("  取得したデータ数: ${movies.size}.")
@@ -37,6 +39,7 @@ class MovieService @Autowired constructor(
     }
 
     fun save(movies: List<Movie>) {
+        log.info("Start save on MovieService")
         log.info("  保存するデータ数: ${movies.size}")
         movies.filter { it.title.isNotEmpty() }
                 .forEach { repository.save(it) }

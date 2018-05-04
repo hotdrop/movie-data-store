@@ -7,10 +7,7 @@ import jp.hotdrop.mds.service.MovieService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/movies")
@@ -31,8 +28,9 @@ class MovieController @Autowired constructor(
         service.save(movies)
     }
 
-    @RequestMapping(value = ["/id"], method = [RequestMethod.GET])
-    fun moviesById(@ApiParam(value = "movie id") @RequestBody id: String): ResponseEntity<Movie> {
+    @ApiOperation(value = "Get Movies data by ID", notes = "IDが一致する映画情報を取得する。")
+    @RequestMapping(method = [RequestMethod.GET], value = ["{id}"])
+    fun moviesById(@ApiParam(value = "movie id") @PathVariable("id") id: String): ResponseEntity<Movie> {
         val movie = service.findById(id) ?: return ResponseEntity(HttpStatus.NO_CONTENT)
         return ResponseEntity.ok(movie)
     }

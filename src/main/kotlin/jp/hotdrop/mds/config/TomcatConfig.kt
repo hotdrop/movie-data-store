@@ -2,8 +2,8 @@ package jp.hotdrop.mds.config
 
 import org.apache.catalina.connector.Connector
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory
-import org.springframework.boot.web.servlet.server.ServletWebServerFactory
+import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer
+import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -14,11 +14,15 @@ class TomcatConfig {
     private var httpPort: Int = 0
 
     @Bean
-    fun servletContainer(): ServletWebServerFactory =
-        TomcatServletWebServerFactory().apply {
-            addAdditionalTomcatConnectors(
-                    Connector("org.apache.coyote.http11.Http11NioProtocol").apply {
-                        port = httpPort
-                    })
+    fun containerCustomizer(): EmbeddedServletContainerCustomizer {
+        return EmbeddedServletContainerCustomizer { container ->
+            (container as? TomcatEmbeddedServletContainerFactory)?.run {
+                val connector = Connector(TomcatEmbeddedServletContainerFactory.DEFAULT_PROTOCOL).apply {
+                    port = httpPort
+                }
+                addAdditionalTomcatConnectors(connector)
+            }
         }
+    }
+
 }
