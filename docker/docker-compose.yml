@@ -1,0 +1,15 @@
+spring-boot:
+  image: bankmonitor/spring-boot
+  volumes:
+    - ~/Desktop/MyStudy/dockerShare/movie-store:/app
+  links:
+    - redis:redis
+  ports:
+    - "9485:9485"
+    - "9916:9916"
+  command: java -jar ./movie-store.jar
+redis:
+  image: redis
+  volumes:
+    - ~/Desktop/MyStudy/dockerShare/movie-store:/data
+  command: redis-server --port 2596

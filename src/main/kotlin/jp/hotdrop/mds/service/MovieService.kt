@@ -35,7 +35,12 @@ class MovieService @Autowired constructor(
     }
 
     fun findByNowPlaying(): List<Movie>? {
-        TODO("未実装")
+        log.info("Start findByNowPlaying on MovieService")
+        val movies = repository.findNowPlaying()
+        movies?.let {
+            log.info("  取得したデータ数: ${movies.size}.")
+        }
+        return movies
     }
 
     fun save(movies: List<Movie>) {
