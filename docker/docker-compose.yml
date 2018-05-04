@@ -5,8 +5,8 @@ spring-boot:
   links:
     - redis:redis
   ports:
-    - "9485:9485"
-    - "9916:9916"
+    - "4928:4928"
+    - "7463:7463"
   command: java -jar ./movie-store.jar
 redis:
   image: redis

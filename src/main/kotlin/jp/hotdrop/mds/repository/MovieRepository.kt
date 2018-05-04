@@ -25,9 +25,11 @@ class MovieRepository @Autowired constructor(
         dbClient.jedis.run {
             val entity = movie.toEntity()
             entity.id = dbClient.createMovieId().toString()
+            // TODO createAt入れておく
             log.debug("  保存する映画情報: id=${movie.id} title=${movie.title}")
             this.sadd(INDEX_KEY_FOR_SORT, entity.id)
             this.hmset(entity.id, entity.toHashMap())
+            this.bgsave()
         }
     }
 

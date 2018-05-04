@@ -20,7 +20,7 @@ class MovieService @Autowired constructor(
     private val log = LoggerFactory.getLogger("jp.hotdrop.mds.trace")
 
     fun findById(id: String): Movie? {
-        log.info("Start findById on MovieService")
+        log.info("Start findById on MovieService. id=$id")
         id.toLongOrNull() ?: throw MdsException(400, "ID is not Long data type! id=$id.")
         return repository.find(id)
     }

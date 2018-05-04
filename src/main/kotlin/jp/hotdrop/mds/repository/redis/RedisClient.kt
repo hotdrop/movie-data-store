@@ -21,11 +21,11 @@ class RedisClient @Autowired constructor(
     }
 
     private val MOVIE_ID = "movieId"
-    private val MOIVE_ID_FIRST_VALUE = "0"
+    private val MOVIE_ID_FIRST_VALUE = "0"
 
     fun createMovieId(): Long {
         if (jedisToKey.exists(MOVIE_ID)) {
-            jedisToKey.set(MOVIE_ID, MOIVE_ID_FIRST_VALUE)
+            jedisToKey.set(MOVIE_ID, MOVIE_ID_FIRST_VALUE)
         }
         return jedisToKey.incr(MOVIE_ID)
     }
