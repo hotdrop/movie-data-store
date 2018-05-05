@@ -1,6 +1,5 @@
 package jp.hotdrop.mds.service
 
-import jp.hotdrop.mds.exception.MdsException
 import jp.hotdrop.mds.model.Movie
 import jp.hotdrop.mds.repository.MovieRepository
 import org.slf4j.LoggerFactory
@@ -19,9 +18,8 @@ class MovieService @Autowired constructor(
 
     private val log = LoggerFactory.getLogger("jp.hotdrop.mds.trace")
 
-    fun findById(id: String): Movie? {
+    fun findById(id: Long): Movie? {
         log.info("Start findById on MovieService. id=$id")
-        id.toLongOrNull() ?: throw MdsException(400, "ID is not Long data type! id=$id.")
         return repository.find(id)
     }
 
@@ -46,7 +44,17 @@ class MovieService @Autowired constructor(
     fun save(movies: List<Movie>) {
         log.info("Start save on MovieService")
         log.info("  保存するデータ数: ${movies.size}")
-        movies.filter { it.title.isNotEmpty() }
-                .forEach { repository.save(it) }
+        movies.filter { validate(it) }
+                .forEach { repository.store(it) }
+        repository.save()
+    }
+
+    private fun validate(movie: Movie): Boolean {
+        if (movie.title.isEmpty()) {
+            log.error("  Title is empty. skip save on store.")
+            return false
+        }
+        // TODO playingDateEpoch - 規定のフォーマットになっているか yyyy/MM/dd
+        return true
     }
 }

@@ -4,15 +4,15 @@ package jp.hotdrop.mds.repository.entity
  * entityはRepositoryだけで使用する
  */
 data class MovieEntity(
-        var id: String = "",
+        var id: Long = 0,
         val title: String = "",
         val overview: String? = null,
         val imageUrl: String? = null,
-        val playingDateEpoch: String? = null,
+        val playingDateEpoch: Long? = null,
         val filmDirector: String? = null,
         val url: String? = null,
         val movieUrl: String? = null,
-        var createdAtEpoch: String? = null
+        var createdAtEpoch: Long? = null
 ) {
 
     // idはKeyとして保存するためidを除いた項目をHashMapに変換する
@@ -20,11 +20,11 @@ data class MovieEntity(
             "title" to this.title,
             "overview" to this.overview,
             "imageUrl" to this.imageUrl,
-            "playingDateEpoch" to this.playingDateEpoch,
+            "playingDateEpoch" to this.playingDateEpoch.toString(),
             "filmDirector" to this.filmDirector,
             "url" to this.url,
             "movieUrl" to this.movieUrl,
-            "createdAtEpoch" to this.createdAtEpoch
+            "createdAtEpoch" to this.createdAtEpoch.toString()
     )
 
     companion object {

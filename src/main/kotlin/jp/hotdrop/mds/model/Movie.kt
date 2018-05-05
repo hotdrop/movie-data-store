@@ -1,7 +1,7 @@
 package jp.hotdrop.mds.model
 
 data class Movie(
-        val id: String = "",
+        val id: Long = 0,
         val title: String = "",
         val overview: String? = null,
         val imageUrl: String? = null,

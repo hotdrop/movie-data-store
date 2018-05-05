@@ -30,7 +30,7 @@ class MovieController @Autowired constructor(
 
     @ApiOperation(value = "Get Movies data by ID", notes = "IDが一致する映画情報を取得する。")
     @RequestMapping(method = [RequestMethod.GET], value = ["{id}"])
-    fun moviesById(@ApiParam(value = "movie id") @PathVariable("id") id: String): ResponseEntity<Movie> {
+    fun moviesById(@ApiParam(value = "movie id") @PathVariable("id") id: Long): ResponseEntity<Movie> {
         val movie = service.findById(id) ?: return ResponseEntity(HttpStatus.NO_CONTENT)
         return ResponseEntity.ok(movie)
     }
