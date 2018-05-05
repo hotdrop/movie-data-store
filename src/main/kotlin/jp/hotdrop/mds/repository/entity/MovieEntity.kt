@@ -34,21 +34,21 @@ data class MovieEntity(
                 arrayOf("title",
                         "overview",
                         "imageUrl",
-                        "playingDate",
+                        "playingDateEpoch",
                         "filmDirector",
                         "url",
                         "movieUrl",
-                        "createdAt")
+                        "createdAtEpoch")
 
         val TakeParamsForSort =
                 arrayOf("#",
                         "*->title",
                         "*->overview",
                         "*->imageUrl",
-                        "*->playingDate",
+                        "*->playingDateEpoch",
                         "*->filmDirector",
                         "*->url",
                         "*->movieUrl",
-                        "*->createdAt")
+                        "*->createdAtEpoch")
     }
 }
