@@ -1,6 +1,6 @@
 spring:
   redis:
-    host: 'redis'
+    host: 'localhost'
     port: 2596
 server:
   port: 7463

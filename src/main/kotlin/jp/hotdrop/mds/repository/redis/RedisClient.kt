@@ -20,13 +20,15 @@ class RedisClient @Autowired constructor(
         return Jedis(host, port).also { it.select(db.selectNo) }
     }
 
-    private val MOVIE_ID = "movieId"
-    private val MOVIE_ID_FIRST_VALUE = "0"
-
     fun createMovieId(): Long {
-        if (jedisToKey.exists(MOVIE_ID)) {
+        if (!jedisToKey.exists(MOVIE_ID)) {
             jedisToKey.set(MOVIE_ID, MOVIE_ID_FIRST_VALUE)
         }
         return jedisToKey.incr(MOVIE_ID)
+    }
+
+    companion object {
+        private const val MOVIE_ID = "movieId"
+        private const val MOVIE_ID_FIRST_VALUE = "0"
     }
 }

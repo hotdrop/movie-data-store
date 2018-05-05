@@ -12,8 +12,9 @@ data class MovieEntity(
         val filmDirector: String? = null,
         val url: String? = null,
         val movieUrl: String? = null,
-        val createdAtEpoch: String? = null
+        var createdAtEpoch: String? = null
 ) {
+
     // idはKeyとして保存するためidを除いた項目をHashMapに変換する
     fun toHashMap(): HashMap<String, String?> = hashMapOf(
             "title" to this.title,
@@ -25,7 +26,29 @@ data class MovieEntity(
             "movieUrl" to this.movieUrl,
             "createdAtEpoch" to this.createdAtEpoch
     )
+
     companion object {
-        val FIELD_NUM = 8
+        const val FIELD_NUM: Int = 9
+
+        val TakeParams =
+                arrayOf("title",
+                        "overview",
+                        "imageUrl",
+                        "playingDate",
+                        "filmDirector",
+                        "url",
+                        "movieUrl",
+                        "createdAt")
+
+        val TakeParamsForSort =
+                arrayOf("#",
+                        "*->title",
+                        "*->overview",
+                        "*->imageUrl",
+                        "*->playingDate",
+                        "*->filmDirector",
+                        "*->url",
+                        "*->movieUrl",
+                        "*->createdAt")
     }
 }

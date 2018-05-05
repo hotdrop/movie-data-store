@@ -16,75 +16,125 @@ class MovieRepository @Autowired constructor(
 ) {
 
     private val log = LoggerFactory.getLogger("jp.hotdrop.mds.trace")
-    private final val INDEX_KEY_FOR_SORT = "indices"
 
     /**
      * idでソートしたいのでsaddで別途idを保持する
      */
     fun save(movie: Movie) {
-        dbClient.jedis.run {
-            val entity = movie.toEntity()
-            entity.id = dbClient.createMovieId().toString()
-            // TODO createAt入れておく
-            log.debug("  保存する映画情報: id=${movie.id} title=${movie.title}")
-            this.sadd(INDEX_KEY_FOR_SORT, entity.id)
-            this.hmset(entity.id, entity.toHashMap())
-            this.bgsave()
-        }
+
+        val entity = movie.toEntity()
+        entity.id = dbClient.createMovieId().toString()
+        entity.createdAtEpoch = System.currentTimeMillis().toString()
+
+        log.info("  保存する映画情報: id=${entity.id} title=${entity.title}")
+
+        dbClient.jedis.sadd(INDEX_KEY_FOR_SORT, entity.id)
+        dbClient.jedis.hmset(entity.id, entity.toHashMap())
+        dbClient.jedis.bgsave()
     }
 
     /**
      * idを指定してデータを取得する
      */
-    fun find(id: String): Movie? =
-            dbClient.jedis.run {
-                val results = this.hmget(id, *takeParams)
-                if (results.size != MovieEntity.FIELD_NUM) {
-                    log.debug("  MovieID=$id の取得データ数がおかしいです。正常なMovieはデータ数${MovieEntity.FIELD_NUM}に対し、${results.size}となっています。")
-                    return null
-                }
-                MovieEntity(id = results[0],
-                        title = results[1],
-                        overview = results[2],
-                        imageUrl = results[3],
-                        playingDateEpoch = results[4],
-                        filmDirector = results[5],
-                        url = results[6],
-                        movieUrl = results[7],
-                        createdAtEpoch = results[8]).toMovie()
-            }
+    fun find(id: String): Movie? {
+        val results = dbClient.jedis.hmget(id, *MovieEntity.TakeParams)
+
+        if(results.size == 0) {
+            return null
+        }
+
+        return resultToEntity(results, id).toMovie()
+    }
 
     /**
      * 映画情報を全て取得する
      */
-    fun findAll(): List<Movie>? {
+    fun findAll(): List<Movie>? =
+            selectAllOrderById().map { it.toMovie() }
 
-        val sortingParams = SortingParams().asc().get(*takeParams).alpha()
+    /**
+     * 公開日から2ヶ月以内の映画情報を取得する
+     */
+    fun findNowPlaying(): List<Movie>? =
+            TODO("filterでplayingDateEpochをチェック")
+
+    /**
+     * 全データを登録順（IDソートの降順）で取得する
+     * idを指定した1件検索以外はこれで全部取得してからfilterかけて条件に一致するデータを取得する。
+     */
+    private fun selectAllOrderById(): List<MovieEntity> {
+
+        val sortingParams = SortingParams().asc().get(*MovieEntity.TakeParamsForSort).alpha()
         val results = dbClient.jedis.sort(INDEX_KEY_FOR_SORT, sortingParams)
 
         val dataCount = results.size / MovieEntity.FIELD_NUM
         log.info("  取得した全映画情報のデータ数: $dataCount")
 
-        val movies = mutableListOf<MovieEntity>()
-
-        return (0 until dataCount)
-                .map { it * MovieEntity.FIELD_NUM }
-                .mapTo(movies) {
-                    MovieEntity(
-                            id = results[0 + it],
-                            title = results[1 + it],
-                            overview = results[2 + it],
-                            imageUrl = results[3 + it],
-                            playingDateEpoch = results[4 + it],
-                            filmDirector = results[5 + it],
-                            url = results[6 + it],
-                            movieUrl = results[7 + it],
-                            createdAtEpoch = results[8 + it]) }
-                .map { it.toMovie() }
+        // Redisから取得したデータはレコード形式になっていないので配列インデックスで表す
+        return (0 until dataCount).map { it * MovieEntity.FIELD_NUM }
+                .map {recordIndex ->
+                    // dataCountを計算しているのでIndexOutOfBoundになることはない
+                    resultToEntityForSort(results, recordIndex)
+                }
     }
 
-    fun findNowPlaying(): List<Movie>? {
-        TODO("")
+    /**
+     * Redisのhmsetで保存したデータを取得する際、レコード単位ではなくシリアライズにカラムをリスト形式で取得してしまう。
+     * これだと扱いにくいので、リストをEntityにして取得する。
+     * 引数で指定したindexからカラム数分を取得してEntityを生成する。
+     * hmgetした場合とsortした場合でidの取り方が違うので、引数で指定可能にする
+     */
+    private fun resultToEntity(results: List<String?>, id: String): MovieEntity {
+
+        // 項目はidを除いた数と一致するはず
+        if (results.size != MovieEntity.FIELD_NUM - 1) {
+            throw IllegalStateException("  MovieID=$id の取得データ数がおかしいです。正常なMovieはデータ数${MovieEntity.FIELD_NUM - 1}に対し、${results.size}となっています。")
+        }
+
+        if (results[0].isNullOrEmpty()) {
+            throw IllegalStateException("Movie Title is null. ")
+        }
+
+        // ここにきたらidとtitleがnullになることはありえない
+        return MovieEntity(id = id,
+                title = results[0]!!,
+                overview = results[1],
+                imageUrl = results[2],
+                playingDateEpoch = results[3],
+                filmDirector = results[4],
+                url = results[5],
+                movieUrl = results[6],
+                createdAtEpoch = results[7])
+    }
+
+    /**
+     * Sort用のMovieEntity作成メソッド
+     * 本当は通常のhmgetと同じにしたかったが、ちょっとずつ処理を変える必要があって
+     * あまりに読みづらくなったので別にする。
+     *
+     */
+    private fun resultToEntityForSort(results: List<String?>, index: Int): MovieEntity {
+
+        if (results[index].isNullOrEmpty()) {
+            throw IllegalStateException("Movie ID is null. ")
+        }
+        if (results[index + 1].isNullOrEmpty()) {
+            throw IllegalStateException("Movie Title is null. ")
+        }
+        if (results.size < index + 8) {
+            throw IllegalStateException("Index out of bounds. result size=${results.size} index=${index + 8}")
+        }
+
+        // ここにきたらidとtitleがnullになることはありえない
+        return MovieEntity(id = results[index]!!,
+                title = results[index + 1]!!,
+                overview = results[index + 2],
+                imageUrl = results[index + 3],
+                playingDateEpoch = results[index + 4],
+                filmDirector = results[index + 5],
+                url = results[index + 6],
+                movieUrl = results[index + 7],
+                createdAtEpoch = results[index + 8])
     }
 
     private fun Movie.toEntity(): MovieEntity {
@@ -117,14 +167,7 @@ class MovieRepository @Autowired constructor(
                 createdAt = createAt)
     }
 
-    private val takeParams =
-            arrayOf("#",
-                    "*->title",
-                    "*->overview",
-                    "*->imageUrl",
-                    "*->playingDate",
-                    "*->filmDirector",
-                    "*->url",
-                    "*->movieUrl",
-                    "*->createdAt")
+    companion object {
+        private const val INDEX_KEY_FOR_SORT = "indices"
+    }
 }
