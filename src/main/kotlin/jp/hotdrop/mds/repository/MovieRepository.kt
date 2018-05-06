@@ -26,7 +26,7 @@ class MovieRepository @Autowired constructor(
      */
     fun store(movie: Movie) {
         val entity = movie.toEntity()
-        log.info("  保存する映画情報: id=${entity.id} title=${entity.title}")
+        log.info("  Save movie data: id=${entity.id} title=${entity.title}")
         dbClient.jedis.sadd(INDEX_KEY_FOR_SORT, entity.id.toString())
         dbClient.jedis.hmset(entity.id.toString(), entity.toHashMap())
     }
@@ -54,9 +54,10 @@ class MovieRepository @Autowired constructor(
      */
     private fun resultToEntity(results: List<String?>, id: Long): MovieEntity {
 
-        // 項目はidを除いた数と一致するはず
+        // これらのチェックは、正規の方法でデータを入れている限り絶対にエラールート（trueのルート）を通らない。
+        // データを直接いじった、または何らかの不具合でおかしなデータが入ってしまった時用である。
         if (results.size != MovieEntity.FIELD_NUM - 1) {
-            throw IllegalStateException("  MovieID=$id の取得データ数がおかしいです。正常なMovieはデータ数${MovieEntity.FIELD_NUM - 1}に対し、${results.size}となっています。")
+            throw IllegalStateException("Error!! MovieID=$id data size is invalid!! Correct size=${MovieEntity.FIELD_NUM - 1} obtained size=${results.size}")
         }
 
         if (results[0].isNullOrEmpty()) {
@@ -104,7 +105,7 @@ class MovieRepository @Autowired constructor(
         val results = dbClient.jedis.sort(INDEX_KEY_FOR_SORT, sortingParams)
 
         val dataCount = results.size / MovieEntity.FIELD_NUM
-        log.info("  取得した全映画情報のデータ数: $dataCount")
+        log.info("  Number of data of all selected movies data: $dataCount")
 
         // Redisから取得したデータはレコード形式になっていないので配列インデックスで表す
         return (0 until dataCount)
@@ -119,21 +120,21 @@ class MovieRepository @Autowired constructor(
      * Sort用のMovieEntity作成メソッド
      * 本当は通常のhmgetと同じにしたかったが、ちょっとずつ処理を変える必要があって
      * あまりに読みづらくなったので別にする。
-     *
      */
     private fun resultToEntityForSort(results: List<String?>, index: Int): MovieEntity {
 
+        // これらのチェックは、正規の方法でデータを入れている限り絶対にエラールート（trueのルート）を通らない。
+        // データを直接いじった、または何らかの不具合でおかしなデータが入ってしまった時用である。
         if (results[index].isNullOrEmpty()) {
-            throw IllegalStateException("Movie ID is null. ")
+            throw IllegalStateException("Error!! Movie ID take out from Redis is null!! ")
         }
         if (results[index + 1].isNullOrEmpty()) {
-            throw IllegalStateException("Movie Title is null. ")
+            throw IllegalStateException("Error!! Movie Title take out from Redis is null!! ")
         }
         if (results.size < index + 8) {
-            throw IllegalStateException("Index out of bounds. result size=${results.size} index=${index + 8}")
+            throw IllegalStateException("Error!! Result size is invalid!! result size=${results.size} index=${index + 8}")
         }
 
-        // ここにきたらidとtitleがnullになることはありえない
         return MovieEntity(id = results[index]!!.toLong(),
                 title = results[index + 1]!!,
                 overview = results[index + 2],

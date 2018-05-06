@@ -27,7 +27,7 @@ class MovieService @Autowired constructor(
         log.info("Start findAll on MovieService")
         val movies = repository.findAll()
         movies?.let {
-            log.info("  取得したデータ数: ${movies.size}.")
+            log.info("  Number of acquired movies: ${movies.size}.")
         }
         return movies
     }
@@ -36,14 +36,14 @@ class MovieService @Autowired constructor(
         log.info("Start findByNowPlaying on MovieService")
         val movies = repository.findNowPlaying()
         movies?.let {
-            log.info("  取得したデータ数: ${movies.size}.")
+            log.info("  Number of acquired movies: ${movies.size}.")
         }
         return movies
     }
 
     fun save(movies: List<Movie>) {
         log.info("Start save on MovieService")
-        log.info("  保存するデータ数: ${movies.size}")
+        log.info("  Number of saved movies: ${movies.size}")
         movies.filter { validate(it) }
                 .forEach { repository.store(it) }
         repository.save()
@@ -51,7 +51,7 @@ class MovieService @Autowired constructor(
 
     private fun validate(movie: Movie): Boolean {
         if (movie.title.isEmpty()) {
-            log.error("  Title is empty. skip save on store.")
+            log.info("  Title is empty. skip save on store.")
             return false
         }
         // TODO playingDateEpoch - 規定のフォーマットになっているか yyyy/MM/dd
