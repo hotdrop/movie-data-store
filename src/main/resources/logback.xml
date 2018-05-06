@@ -59,5 +59,4 @@
         <appender-ref ref="STDOUT" />
         <appender-ref ref="ERROR" />
     </root>
-
 </configuration>

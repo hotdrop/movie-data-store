@@ -4,8 +4,5 @@ out
 logs
 build
 
-# my local environment files
-myBuild.sh
-
 # ssl setting files
 env

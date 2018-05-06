@@ -1,0 +1,12 @@
+spring:
+  redis:
+    host: 'localhost'
+    port: 2596
+server:
+  port: 7463
+  ssl:
+    key-store: ./env/server.keystore
+    key-store-password: keypass
+    key-password: serverpass
+  http:
+    port: 4928
